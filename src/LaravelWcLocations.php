@@ -111,8 +111,8 @@ class LaravelWcLocations
         if ($code && is_string($code)) {
             $code = [$code];
         }
+        $countries = [];
         if ($code && is_array($code)) {
-            $countries = [];
             foreach ($code as $country_code) {
                 if (array_key_exists($country_code, $this->countries)) {
                     $copy = new \ArrayObject($this->countries[$country_code]);
@@ -121,20 +121,25 @@ class LaravelWcLocations
                     if ($translate && $this->locale) {
                         $country['name'] = $this->getTranslation($country['name'], 'country');
                     }
-                    if ($with_states) {
-                        $country['states'] = $this->getStates(
-                            country_code: $country_code,
-                            translate: $translate
-                        );
-                    }
-                    $countries[$country_code] = (object) $country;
+                    $countries[$country_code] = $country;
                 }
             }
-
-            return collect($countries);
+        } else {
+            $copy = new \ArrayObject($this->countries);
+            $countries = $copy->getArrayCopy();
+            unset($copy);
         }
 
-        return collect($this->countries);
+        if ($with_states) {
+            foreach ($countries as $country_code => $country) {
+                $countries[$country_code]['states'] = $this->getStates(
+                    country_code: $country_code,
+                    translate: $translate
+                );
+            }
+        }
+
+        return collect($countries);
     }
 
     public function getStates(
