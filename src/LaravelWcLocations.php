@@ -48,7 +48,9 @@ class LaravelWcLocations
 
         $continents = $this->continents;
         if (($translate && $this->locale) || $with_countries) {
-            $continents = clone $this->continents;
+            $copy = new \ArrayObject($continents);
+            $continents = $copy->getArrayCopy();
+            unset($copy);
         }
         if ($translate && $this->locale) {
             foreach ($continents as $key => $continent) {
@@ -113,7 +115,9 @@ class LaravelWcLocations
             $countries = [];
             foreach ($code as $country_code) {
                 if (array_key_exists($country_code, $this->countries)) {
-                    $country = clone $this->countries[$country_code];
+                    $copy = new \ArrayObject($this->countries[$country_code]);
+                    $country = $copy->getArrayCopy();
+                    unset($copy);
                     if ($translate && $this->locale) {
                         $country['name'] = $this->getTranslation($country['name'], 'country');
                     }
@@ -142,9 +146,11 @@ class LaravelWcLocations
         }
         $states = $this->states[$country_code] ?? [];
         if ($translate && $this->locale) {
-            $states = clone $this->states[$country_code] ?? [];
+            $copy = new \ArrayObject($states);
+            $states = $copy->getArrayCopy();
+            unset($copy);
             foreach ($states as $key => $state) {
-                $states[$key] = $this->getTranslation($state, 'state');
+                $states[$key]['name'] = $this->getTranslation($state['name'], 'state');
             }
         }
 
@@ -153,7 +159,7 @@ class LaravelWcLocations
 
     private function getTranslation($key, $type)
     {
-        if (File::exists(__DIR__.'/../resources/lang/'.$this->locale.'/'.$type.'.php')) {
+        if (file_exists(__DIR__.'/../resources/lang/'.$this->locale.'/'.$type.'.php')) {
             $translations = require __DIR__.'/../resources/lang/'.$this->locale.'/'.$type.'.php';
         } else {
             return $key;
